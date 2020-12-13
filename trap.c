@@ -89,7 +89,7 @@ trap(struct trapframe *tf)
      cprintf("before PGROUNDWN :0x %x \n",rcr2());
      uint va = PGROUNDDOWN(rcr2());
    /*  memset(mem , 0 , PGSIZE); */
-     cprintf("after PGROUNDWN :0x %x \n",va);
+   cprintf("after PGROUNDWN :0x %x \n",va);
      if(mappages(myproc()->pgdir ,(void *)va , PGSIZE , V2P(mem) ,PTE_W |PTE_U) >=0){
        break;
      }
