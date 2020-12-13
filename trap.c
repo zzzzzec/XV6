@@ -13,6 +13,8 @@ struct gatedesc idt[256];
 extern uint vectors[];  // in vectors.S: array of 256 entry pointers
 struct spinlock tickslock;
 uint ticks;
+extern  int mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm);
+  char * mem;
 
 void
 tvinit(void)
@@ -77,7 +79,23 @@ trap(struct trapframe *tf)
             cpuid(), tf->cs, tf->eip);
     lapiceoi();
     break;
-
+  case T_PGFLT :
+  //handle page fault
+ //maybe we need to map the fault v-addr to p_addr
+   cprintf("PAGE FAULT !!! \n");
+   mem = kalloc();
+   //allcotae 4096 byte;
+   if( mem != 0){
+     cprintf("before PGROUNDWN :0x %x \n",rcr2());
+     uint va = PGROUNDDOWN(rcr2());
+   /*  memset(mem , 0 , PGSIZE); */
+     cprintf("after PGROUNDWN :0x %x \n",va);
+     if(mappages(myproc()->pgdir ,(void *)va , PGSIZE , V2P(mem) ,PTE_W |PTE_U) >=0){
+       break;
+     }
+   }
+   /* cprintf("page fault at addr 0x%x\n",rcr2());*/
+    break;
   //PAGEBREAK: 13
   default:
     if(myproc() == 0 || (tf->cs&3) == 0){
@@ -87,11 +105,11 @@ trap(struct trapframe *tf)
       panic("trap");
     }
     // In user space, assume process misbehaved.
-    cprintf("pid %d %s: trap %d err %d on cpu %d "
+    /*cprintf("pid %d %s: trap %d err %d on cpu %d "
             "eip 0x%x addr 0x%x--kill proc\n",
             myproc()->pid, myproc()->name, tf->trapno,
             tf->err, cpuid(), tf->eip, rcr2());
-    myproc()->killed = 1;
+    myproc()->killed = 1;*/
   }
 
   // Force process exit if it has been killed and is in user space.
