@@ -14,7 +14,7 @@ extern uint vectors[];  // in vectors.S: array of 256 entry pointers
 struct spinlock tickslock;
 uint ticks;
 extern  int mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm);
-  char * mem;
+char * mem;
 
 void
 tvinit(void)
@@ -50,11 +50,25 @@ trap(struct trapframe *tf)
 
   switch(tf->trapno){
   case T_IRQ0 + IRQ_TIMER:
+  //cprintf("here \n");
     if(cpuid() == 0){
       acquire(&tickslock);
       ticks++;
       wakeup(&ticks);
       release(&tickslock);
+    }
+      //cprintf("ste alarmticks is %d \n",myproc()->alarmticks);
+    if(myproc() && ((tf->cs &3 ) == 3))
+    {
+       cprintf("curalarmticks is %d \n",myproc()->curalarmticks);
+       myproc()->curalarmticks++;
+       if(myproc()->curalarmticks == myproc()->alarmticks)
+       {
+           myproc()->curalarmticks = 0;  //clean cur
+           tf->esp -= 4;
+           *((uint *)(tf->esp))  =  tf->eip;
+           tf->eip = (uint)myproc()->alarmhandler;        
+        } 
     }
     lapiceoi();
     break;
@@ -82,14 +96,14 @@ trap(struct trapframe *tf)
   case T_PGFLT :
   //handle page fault
  //maybe we need to map the fault v-addr to p_addr
-   cprintf("PAGE FAULT !!! \n");
+   //cprintf("PAGE FAULT !!! \n");
    mem = kalloc();
    //allcotae 4096 byte;
    if( mem != 0){
-     cprintf("before PGROUNDWN :0x %x \n",rcr2());
+    // cprintf("before PGROUNDWN :0x %x \n",rcr2());
      uint va = PGROUNDDOWN(rcr2());
    /*  memset(mem , 0 , PGSIZE); */
-   cprintf("after PGROUNDWN :0x %x \n",va);
+   //cprintf("after PGROUNDWN :0x %x \n",va);
      if(mappages(myproc()->pgdir ,(void *)va , PGSIZE , V2P(mem) ,PTE_W |PTE_U) >=0){
        break;
      }

@@ -100,6 +100,7 @@ extern int sys_wait(void);
 extern int sys_write(void);
 extern int sys_uptime(void);
 extern int sys_date(void);
+extern int sys_alarm(void);
 
 /*fuction pointer table*/
 static int (*syscalls[])(void) = {
@@ -124,7 +125,8 @@ static int (*syscalls[])(void) = {
     [SYS_link] sys_link,
     [SYS_mkdir] sys_mkdir,
     [SYS_close] sys_close,
-    [SYS_date] sys_date
+    [SYS_date] sys_date,
+    [SYS_alarm] sys_alarm
 };
 /*name table*/
 /*static char names[][6] = {
@@ -149,7 +151,8 @@ static int (*syscalls[])(void) = {
     [SYS_link] "link",
     [SYS_mkdir] "mkdir",
     [SYS_close] "close",
-    [SYS_date] "date"
+    [SYS_date] "date",
+    SYS_alarm] "alarm"
 };*/
 void syscall(void)
 {
